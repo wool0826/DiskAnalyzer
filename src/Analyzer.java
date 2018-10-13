@@ -32,14 +32,14 @@ public class Analyzer extends JFrame {
             e.printStackTrace();
         }
 
-        String result = SelectDrive();
+        String result = selectDrive();
         if(result == null)
             return;
 
         new Analyzer(execute(result));
     }
 
-    public static String SelectDrive()
+    public static String selectDrive()
     {
         File[] roots = File.listRoots();
         String[] drives = new String[roots.length];
@@ -83,14 +83,8 @@ public class Analyzer extends JFrame {
             if (!f.isHidden())
             {
                 load.path = f.getAbsolutePath();
-                new Thread(new Runnable()
-                {
-                    public void run()
-                    {
-                        Analyzer.load.increase();
-                        Analyzer.load.p.setText("처리 중: " + Analyzer.load.path);
-                    }
-                }).start();
+                Runnable task = () -> {Analyzer.load.increase(); Analyzer.load.p.setText("처리 중: " + Analyzer.load.path);};
+                new Thread(task).start();
 
                 sizeCheck(f);
             }
@@ -98,6 +92,13 @@ public class Analyzer extends JFrame {
         stack.pop();
 
         rootNode.sort();
+
+        ArrayList<MyDataNode> nodeList = (ArrayList)rootNode.getChildren();
+        long sum = 0;
+        for(int i=0, j=nodeList.size(); i<j; i++){
+            sum += nodeList.get(i).getbyteSize();
+        }
+        rootNode.setSize(sum);
 
         load.complete();
 
@@ -128,13 +129,8 @@ public class Analyzer extends JFrame {
         {
             File f = list[i];
             load.path = f.getAbsolutePath();
-            new Thread(new Runnable()
-            {
-                public void run()
-                {
-                    Analyzer.load.p.setText("처리 중: " + Analyzer.load.path);
-                }
-            }).start();
+            Runnable task = () -> {Analyzer.load.p.setText("처리 중: " + Analyzer.load.path);};
+            new Thread(task).start();
             sum += sizeCheck(f);
         }
         stack.pop();
